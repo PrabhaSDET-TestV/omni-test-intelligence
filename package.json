@@ -1,0 +1,33 @@
+{
+  "name": "@testvagrant/omni-test-intelligence",
+  "version": "1.0.0",
+  "description": "Enterprise Test Intelligence Platform - Simplify test reporting with AI-powered insights.",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "scripts": {
+    "build": "tsc",
+    "prepare": "npm run build"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/PrabhaSDET-TestV/omni-test-intelligence.git"
+  },
+  "keywords": [
+    "test",
+    "automation",
+    "reporting",
+    "playwright",
+    "ci",
+    "ai",
+    "analytics",
+    "intelligence"
+  ],
+  "author": "TestVagrant",
+  "license": "MIT",
+  "dependencies": {
+    "axios": "^1.6.0"
+  },
+  "devDependencies": {
+    "typescript": "^5.4.0"
+  }
+}
