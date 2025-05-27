@@ -108,7 +108,6 @@ export const TestCaseService = {
     screenshots: ScreenshotMeta[];
     steps: Step[];
   }): TestCasePayload {
-    // Normalize status
     let normalizedStatus: "passed" | "failed" | "skipped";
     switch (testInfo.status) {
       case "passed":
@@ -123,11 +122,15 @@ export const TestCaseService = {
         break;
     }
 
-    // Extract tags and determine priority
-    const tags = testInfo.tags?.map((tag) => tag.replace(/^@/, "")) || [];
-    const priorityTag = tags.find((t) => /^P[0-3]$/.test(t));
+    const tags: string[] =
+      testInfo.tags?.map((tag: string) => tag.replace(/^@/, "")) || [];
+    const priorityTag: string | undefined = tags.find((t: string) =>
+      /^P[0-3]$/.test(t)
+    );
     const priority: "P0" | "P1" | "P2" | "P3" = (priorityTag as any) || "P1";
-    const filteredTags = tags.filter((t) => t !== priority);
+    const filteredTags: string[] = tags.filter(
+      (t: string) => t !== priority
+    );
 
     return {
       name: testInfo.title,
