@@ -12,26 +12,44 @@ import {
   ScreenshotMeta,
 } from "./types";
 
-const BASE_URL = process.env.BASE_URL!;
-const PROJECT_ID = process.env.PROJECT_ID!;
-const API_KEY = process.env.API_KEY!;
+// Config store
+let config = {
+  BASE_URL: "",
+  PROJECT_ID: "",
+  API_KEY: "",
+};
 
-const headers = {
-  "x-api-key": API_KEY,
+// Exposed function for user to call in test setup
+export function configureOmniTest({
+  baseUrl,
+  projectId,
+  apiKey,
+}: {
+  baseUrl: string;
+  projectId: string;
+  apiKey: string;
+}) {
+  config.BASE_URL = baseUrl;
+  config.PROJECT_ID = projectId;
+  config.API_KEY = apiKey;
+}
+
+const headers = () => ({
+  "x-api-key": config.API_KEY,
   "Content-Type": "application/json",
   Accept: "application/json",
-};
+});
 
 export const BuildService = {
   async startBuild(environment = "production"): Promise<Build> {
-    const url = `${BASE_URL}/projects/${PROJECT_ID}/builds?days=7&environment=${environment}`;
+    const url = `${config.BASE_URL}/projects/${config.PROJECT_ID}/builds?days=7&environment=${environment}`;
     const payload = {
       duration: 0,
       environment,
       status: "in_progress",
     };
     const response = await axios.post<StartBuildResponse>(url, payload, {
-      headers,
+      headers: headers(),
     });
     return response.data.build;
   },
@@ -42,7 +60,7 @@ export const BuildService = {
     duration: number,
     environment = "production"
   ): Promise<Build> {
-    const url = `${BASE_URL}/projects/${PROJECT_ID}/builds?build_id=${buildId}`;
+    const url = `${config.BASE_URL}/projects/${config.PROJECT_ID}/builds?build_id=${buildId}`;
     const payload = {
       progress_status: "completed",
       status,
@@ -50,7 +68,7 @@ export const BuildService = {
       environment,
     };
     const response = await axios.patch<CompleteBuildResponse>(url, payload, {
-      headers,
+      headers: headers(),
     });
     return response.data.build;
   },
@@ -61,7 +79,7 @@ export const TestCaseService = {
     buildId: string,
     testCasePayload: TestCasePayload
   ): Promise<any> {
-    const url = `${BASE_URL}/projects/${PROJECT_ID}/test-cases`;
+    const url = `${config.BASE_URL}/projects/${config.PROJECT_ID}/test-cases`;
     const payload = {
       build_id: buildId,
       test_cases: [testCasePayload],
@@ -69,7 +87,7 @@ export const TestCaseService = {
 
     console.log(`Test case payload: `, payload);
     try {
-      const response = await axios.post(url, payload, { headers });
+      const response = await axios.post(url, payload, { headers: headers() });
       return response.data;
     } catch (error) {
       console.error("Error creating test case:", error);
@@ -128,9 +146,16 @@ export const TestCaseService = {
       /^P[0-3]$/.test(t)
     );
     const priority: "P0" | "P1" | "P2" | "P3" = (priorityTag as any) || "P1";
-    const filteredTags: string[] = tags.filter(
-      (t: string) => t !== priority
-    );
+    const filteredTags: string[] = tags.filter((t: string) => t !== priority);
+
+    // Auto stdout logs
+    const testStatus = testInfo.status || "unknown";
+    const defaultLog: StdoutLog = {
+      timestamp: new Date().toISOString(),
+      level: testStatus === "passed" ? "INFO" : "ERROR",
+      message: `${testInfo.title} ${testStatus}`,
+    };
+    const fullStdout = [defaultLog, ...stdout];
 
     return {
       name: testInfo.title,
@@ -138,7 +163,7 @@ export const TestCaseService = {
       status: normalizedStatus,
       duration: testInfo.duration || 0,
       steps,
-      stdout,
+      stdout: fullStdout,
       screenshots,
       priority,
       tags: filteredTags,

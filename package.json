@@ -1,9 +1,12 @@
 {
-  "name": "@testvagrant/omni-test-intelligence",
-  "version": "1.0.0",
+  "name": "omni-test-intelligence",
+  "version": "1.0.2",
   "description": "Enterprise Test Intelligence Platform - Simplify test reporting with AI-powered insights.",
-  "main": "dist/index.js",
-  "types": "dist/index.d.ts",
+  "main": "dist/api-client.js",
+  "types": "dist/api-client.d.ts",
+  "files": [
+    "dist"
+  ],
   "scripts": {
     "build": "tsc",
     "prepare": "npm run build"
@@ -31,5 +34,8 @@
     "@playwright/test": "^1.52.0",
     "@types/node": "^22.15.21",
     "typescript": "^5.8.3"
+  },
+  "publishConfig": {
+    "access": "public"
   }
 }
