@@ -97,62 +97,7 @@ export const OmniService = {
     });
     return response.data.build;
   },
-
-  /**
-   * Create a test case in the Omni dashboard.
-   *
-   * @param buildId - ID of the build to attach the test case to
-   * @param testCasePayload - Structured test case data
-   * @returns - The response from the API (includes screenshot upload URLs)
-   */
-
-  async createTestCase(
-    buildId: string,
-    testCasePayload: TestCasePayload
-  ): Promise<any> {
-    const url = `${config.BASE_URL}/projects/${config.PROJECT_ID}/test-cases`;
-    const payload = {
-      build_id: buildId,
-      test_cases: [testCasePayload],
-    };
-
-    console.log(`Test case payload: `, payload);
-    try {
-      const response = await axios.post(url, payload, { headers: headers() });
-      return response.data;
-    } catch (error) {
-      console.error("Error creating test case:", error);
-      throw error;
-    }
-  },
-
-  /**
-   * Upload screenshots using the signed URLs returned by createTestCase().
-   *
-   * @param testCaseResponse - The response returned from createTestCase
-   * @param snapshotFolderPath - Local path where screenshots are saved
-   */
-
-  async uploadScreenshotsAndUpdateDashboard(
-    testCaseResponse: any,
-    snapshotFolderPath: string
-  ) {
-    console.log(`testCaseResponse: ${testCaseResponse}`);
-    console.log(`snapshotFolderPath: ${snapshotFolderPath}`);
-
-    for (const screenshot of testCaseResponse.screenshots) {
-      const imagePath = path.join(snapshotFolderPath, screenshot.name);
-      const fileData = await fs.readFile(imagePath);
-
-      await axios.put(screenshot.upload_url, fileData, {
-        headers: {
-          "Content-Type": "image/png",
-        },
-        maxBodyLength: Infinity,
-      });
-    }
-  },
-
+  
   /**
    * Creates a test case and uploads associated screenshots to the Omni dashboard.
    *
@@ -161,6 +106,7 @@ export const OmniService = {
    * @param snapshotFolderPath - Local folder path containing the screenshots to be uploaded.
    * @returns The response from the Omni dashboard API after creating the test case.
    */
+
   async createTestCaseWithScreenshots(
     buildId: string,
     testCasePayload: TestCasePayload,
@@ -194,7 +140,7 @@ export const OmniService = {
       return response.data;
     } catch (error) {
       console.error(
-        "❌ Error creating test case or uploading screenshots:",
+        "Error creating test case or uploading screenshots:",
         error
       );
       throw error;
