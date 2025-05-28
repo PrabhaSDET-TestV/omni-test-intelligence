@@ -153,6 +153,54 @@ export const OmniService = {
     }
   },
 
+  /**
+   * Creates a test case and uploads associated screenshots to the Omni dashboard.
+   *
+   * @param buildId - ID of the build to attach the test case to.
+   * @param testCasePayload - Structured test case data including metadata, stdout, and screenshots.
+   * @param snapshotFolderPath - Local folder path containing the screenshots to be uploaded.
+   * @returns The response from the Omni dashboard API after creating the test case.
+   */
+  async createTestCaseWithScreenshots(
+    buildId: string,
+    testCasePayload: TestCasePayload,
+    snapshotFolderPath: string
+  ): Promise<any> {
+    const url = `${config.BASE_URL}/projects/${config.PROJECT_ID}/test-cases`;
+    const payload = {
+      build_id: buildId,
+      test_cases: [testCasePayload],
+    };
+
+    console.log(`Test case payload: `, payload);
+    try {
+      const response = await axios.post(url, payload, { headers: headers() });
+      const testCase = response.data.test_cases?.[0];
+
+      if (testCase?.screenshots?.length) {
+        for (const screenshot of testCase.screenshots) {
+          const imagePath = path.join(snapshotFolderPath, screenshot.name);
+          const fileData = await fs.readFile(imagePath);
+
+          await axios.put(screenshot.upload_url, fileData, {
+            headers: {
+              "Content-Type": "image/png",
+            },
+            maxBodyLength: Infinity,
+          });
+        }
+      }
+
+      return response.data;
+    } catch (error) {
+      console.error(
+        "❌ Error creating test case or uploading screenshots:",
+        error
+      );
+      throw error;
+    }
+  },
+
   createTestCasePayload({
     testInfo,
     stdout,
