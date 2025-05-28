@@ -1,2 +1,2 @@
-export * from './src/api-client';
+export * from './src/OmniService';
 export * from './src/types';

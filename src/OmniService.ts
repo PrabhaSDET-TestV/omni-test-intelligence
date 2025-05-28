@@ -19,7 +19,15 @@ let config = {
   API_KEY: "",
 };
 
-// Exposed function for user to call in test setup
+/**
+ * Configure Omni Test API integration.
+ * Should be called once during test setup to set API details.
+ *
+ * @param {Object} configDetails - Configuration object
+ * @param {string} configDetails.baseUrl - Base URL of the Omni dashboard API
+ * @param {string} configDetails.projectId - Project ID for Omni dashboard
+ * @param {string} configDetails.apiKey - API Key for authentication
+ */
 export function configureOmniTest({
   baseUrl,
   projectId,
@@ -40,7 +48,14 @@ const headers = () => ({
   Accept: "application/json",
 });
 
-export const BuildService = {
+export const OmniService = {
+  /**
+   * Start a new test build.
+   *
+   * @param [environment='production'] - Environment name (e.g., 'production', 'staging')
+   * @returns - The created build object
+   */
+
   async startBuild(environment = "production"): Promise<Build> {
     const url = `${config.BASE_URL}/projects/${config.PROJECT_ID}/builds?days=7&environment=${environment}`;
     const payload = {
@@ -53,6 +68,16 @@ export const BuildService = {
     });
     return response.data.build;
   },
+
+  /**
+   * Complete an existing test build.
+   *
+   * @param buildId - The ID of the build to complete
+   * @param status - Final status of the build (e.g., 'passed', 'failed')
+   * @param duration - Duration of the build in milliseconds
+   * @param environment - Environment of the build (default is 'production')
+   * @returns The updated build object
+   */
 
   async completeBuild(
     buildId: string,
@@ -72,9 +97,15 @@ export const BuildService = {
     });
     return response.data.build;
   },
-};
 
-export const TestCaseService = {
+  /**
+   * Create a test case in the Omni dashboard.
+   *
+   * @param buildId - ID of the build to attach the test case to
+   * @param testCasePayload - Structured test case data
+   * @returns - The response from the API (includes screenshot upload URLs)
+   */
+
   async createTestCase(
     buildId: string,
     testCasePayload: TestCasePayload
@@ -94,6 +125,13 @@ export const TestCaseService = {
       throw error;
     }
   },
+
+  /**
+   * Upload screenshots using the signed URLs returned by createTestCase().
+   *
+   * @param testCaseResponse - The response returned from createTestCase
+   * @param snapshotFolderPath - Local path where screenshots are saved
+   */
 
   async uploadScreenshotsAndUpdateDashboard(
     testCaseResponse: any,
@@ -148,7 +186,6 @@ export const TestCaseService = {
     const priority: "P0" | "P1" | "P2" | "P3" = (priorityTag as any) || "P1";
     const filteredTags: string[] = tags.filter((t: string) => t !== priority);
 
-    // Auto stdout logs
     const testStatus = testInfo.status || "unknown";
     const defaultLog: StdoutLog = {
       timestamp: new Date().toISOString(),
