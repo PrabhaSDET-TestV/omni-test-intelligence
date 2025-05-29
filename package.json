@@ -1,6 +1,6 @@
 {
   "name": "omni-test-intelligence",
-  "version": "1.0.8",
+  "version": "1.0.9",
   "description": "Enterprise Test Intelligence Platform - Simplify test reporting with AI-powered insights.",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
