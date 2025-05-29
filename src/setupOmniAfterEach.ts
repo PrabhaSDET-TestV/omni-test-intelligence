@@ -1,29 +1,35 @@
 import { test } from "@playwright/test";
-import path from "path";
 import type { TestInfo } from "@playwright/test";
+import type { StdoutLog, Step } from "./types";
 import { OmniService } from "./OmniService";
 
 export function setupOmniAfterEach(options: {
   buildId: string;
-  snapshotPath?: string;
-  getScreenshots?: () => { name: string; timestamp: string }[];
+  snapshotPath: string;
+  screenshotNames: string[];
+  stdoutLogs?: StdoutLog[];
+  steps?: Step[];
 }) {
   const {
     buildId,
-    snapshotPath = path.resolve(__dirname, "../__snapshots__"),
-    getScreenshots = () => [
-      { name: "error-step1.png", timestamp: new Date().toISOString() },
-      { name: "error-step2.png", timestamp: new Date().toISOString() },
-    ],
+    snapshotPath,
+    screenshotNames,
+    stdoutLogs = [],
+    steps = [],
   } = options;
 
   test.afterEach(async ({}, testInfo: TestInfo) => {
     try {
+      const screenshots = screenshotNames.map((name) => ({
+        name,
+        timestamp: new Date().toISOString(),
+      }));
+
       const payload = OmniService.createTestCasePayload({
         testInfo,
-        stdout: [],
-        screenshots: getScreenshots(),
-        steps: [],
+        stdout: stdoutLogs,
+        screenshots,
+        steps,
       });
 
       const response = await OmniService.createTestCaseWithScreenshots(
@@ -31,9 +37,13 @@ export function setupOmniAfterEach(options: {
         payload,
         snapshotPath
       );
-      console.log("Omni Dashboard Response:", response);
+
+      console.log(`[Omni] Uploaded test case: "${testInfo.title}"`);
     } catch (err) {
-      console.error(`Omni afterEach failed for "${testInfo.title}":`, err);
+      console.error(
+        `[Omni] Failed to upload test case: "${testInfo.title}"`,
+        err
+      );
     }
   });
 }
