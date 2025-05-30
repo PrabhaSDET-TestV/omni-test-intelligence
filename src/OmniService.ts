@@ -24,20 +24,17 @@ let config = {
  * Should be called once during test setup to set API details.
  *
  * @param {Object} configDetails - Configuration object
- * @param {string} configDetails.baseUrl - Base URL of the Omni dashboard API
  * @param {string} configDetails.projectId - Project ID for Omni dashboard
  * @param {string} configDetails.apiKey - API Key for authentication
  */
 export function configureOmniTest({
-  baseUrl,
   projectId,
   apiKey,
 }: {
-  baseUrl: string;
   projectId: string;
   apiKey: string;
 }) {
-  config.BASE_URL = baseUrl;
+  config.BASE_URL = "https://omni-dashboard-inky.vercel.app/api/v1"; // hardcoded
   config.PROJECT_ID = projectId;
   config.API_KEY = apiKey;
 }
@@ -97,7 +94,7 @@ export const OmniService = {
     });
     return response.data.build;
   },
-  
+
   /**
    * Creates a test case and uploads associated screenshots to the Omni dashboard.
    *
