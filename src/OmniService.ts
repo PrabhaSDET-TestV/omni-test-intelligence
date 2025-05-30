@@ -1,8 +1,9 @@
 import axios from "axios";
 import fs from "fs/promises";
 import path from "path";
+import { test } from "@playwright/test";
 import type { TestInfo } from "@playwright/test";
-import {
+import type {
   Build,
   StartBuildResponse,
   CompleteBuildResponse,
@@ -22,10 +23,6 @@ let config = {
 /**
  * Configure Omni Test API integration.
  * Should be called once during test setup to set API details.
- *
- * @param {Object} configDetails - Configuration object
- * @param {string} configDetails.projectId - Project ID for Omni dashboard
- * @param {string} configDetails.apiKey - API Key for authentication
  */
 export function configureOmniTest({
   projectId,
@@ -46,13 +43,6 @@ const headers = () => ({
 });
 
 export const OmniService = {
-  /**
-   * Start a new test build.
-   *
-   * @param [environment='production'] - Environment name (e.g., 'production', 'staging')
-   * @returns - The created build object
-   */
-
   async startBuild(environment = "production"): Promise<Build> {
     const url = `${config.BASE_URL}/projects/${config.PROJECT_ID}/builds?days=7&environment=${environment}`;
     const payload = {
@@ -65,16 +55,6 @@ export const OmniService = {
     });
     return response.data.build;
   },
-
-  /**
-   * Complete an existing test build.
-   *
-   * @param buildId - The ID of the build to complete
-   * @param status - Final status of the build (e.g., 'passed', 'failed')
-   * @param duration - Duration of the build in milliseconds
-   * @param environment - Environment of the build (default is 'production')
-   * @returns The updated build object
-   */
 
   async completeBuild(
     buildId: string,
@@ -94,15 +74,6 @@ export const OmniService = {
     });
     return response.data.build;
   },
-
-  /**
-   * Creates a test case and uploads associated screenshots to the Omni dashboard.
-   *
-   * @param buildId - ID of the build to attach the test case to.
-   * @param testCasePayload - Structured test case data including metadata, stdout, and screenshots.
-   * @param snapshotFolderPath - Local folder path containing the screenshots to be uploaded.
-   * @returns The response from the Omni dashboard API after creating the test case.
-   */
 
   async createTestCaseWithScreenshots(
     buildId: string,
@@ -200,3 +171,51 @@ export const OmniService = {
     };
   },
 };
+
+/**
+ * Sets up the `afterEach` hook to upload test case data and screenshots to Omni.
+ */
+export function setupOmniAfterEach(options: {
+  buildId: string;
+  snapshotPath: string;
+  screenshotNames: string[];
+  stdoutLogs?: StdoutLog[];
+  steps?: Step[];
+}) {
+  const {
+    buildId,
+    snapshotPath,
+    screenshotNames,
+    stdoutLogs = [],
+    steps = [],
+  } = options;
+
+  test.afterEach(async ({}, testInfo: TestInfo) => {
+    try {
+      const screenshots = screenshotNames.map((name) => ({
+        name,
+        timestamp: new Date().toISOString(),
+      }));
+
+      const payload = OmniService.createTestCasePayload({
+        testInfo,
+        stdout: stdoutLogs,
+        screenshots,
+        steps,
+      });
+
+      const response = await OmniService.createTestCaseWithScreenshots(
+        buildId,
+        payload,
+        snapshotPath
+      );
+
+      console.log(`[Omni] Uploaded test case: "${testInfo.title}"`);
+    } catch (err) {
+      console.error(
+        `[Omni] Failed to upload test case: "${testInfo.title}"`,
+        err
+      );
+    }
+  });
+}
