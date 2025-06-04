@@ -69,6 +69,7 @@ export const OmniService = {
       duration,
       environment,
     };
+    console.log(url, payload);
     const response = await axios.patch<CompleteBuildResponse>(url, payload, {
       headers: headers(),
     });
