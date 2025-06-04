@@ -168,7 +168,7 @@ class MyReporter implements Reporter {
       const PROJECT_ID = process.env.PROJECT_ID;
       const API_KEY = process.env.API_KEY;
       const environment = 'production';
-      const duration = 800;
+      const roundedDuration = Math.round(result.duration);
 
       if (!PROJECT_ID || !API_KEY) {
         console.error(chalk.red('[OmniReporter] Error: PROJECT_ID and API_KEY environment variables are required'));
@@ -185,7 +185,7 @@ class MyReporter implements Reporter {
       const payload = {
         progress_status: 'completed',
         status: result.status,
-        duration,
+        duration: roundedDuration,
         environment,
       };
 
