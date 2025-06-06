@@ -123,6 +123,7 @@ class MyReporter implements Reporter {
       stdout,
       screenshots: screenshotMeta,
       traces: [{"name": "trace.zip"}],
+      annotations: result.annotations,
       error_message: errorMessage,
       error_stack_trace: errorStack,
     };
